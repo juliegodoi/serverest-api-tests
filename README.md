@@ -12,7 +12,7 @@ Este repositório contém testes automatizados de API para a aplicação [ServeR
 - [Autor](#autor)
 
 ## Links Relacionados
-- **Repositório de Testes de Front-End:** [GitHub - ServeRest Front-End Tests](https://github.com/juliegodoi)
+- **Repositório de Testes de Front-End:** [GitHub - ServeRest Front-End Tests]([https://github.com/juliegodoi](https://github.com/juliegodoi/serverest-front-tests))
 
 ## Estrutura do Projeto
 A arquitetura do projeto é composta pelos próprios arquivos exportados do sistema do Postman, dividida nas seguintes pastas:
