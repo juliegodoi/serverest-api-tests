@@ -1,0 +1,1991 @@
+{
+  "info": {
+    "_postman_id": "33dc1ab6-c0ce-40d3-bb87-817068bf2495",
+    "name": "ServeRest",
+    "description": "lorem",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "37384830",
+    "_collection_link": "https://go.postman.co/collection/37384830-33dc1ab6-c0ce-40d3-bb87-817068bf2495?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Autenticação",
+      "item": [
+        {
+          "name": "Cadastrar Usuário ADM",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Gera massa de dados",
+                  "const nomeCompleto = pm.variables.replaceIn('{{$randomFullName}}');",
+                  "const primeiroNome = nomeCompleto.split(' ')[0].toLowerCase();",
+                  "const emailUnico = `${primeiroNome}${Date.now()}@email.com`;",
+                  "const senhaAleatoria = pm.variables.replaceIn('{{$randomPassword}}');",
+                  "",
+                  "// Salva os dados gerados no environment",
+                  "pm.environment.set(\"userName\", nomeCompleto);",
+                  "pm.environment.set(\"userEmail\", emailUnico);",
+                  "pm.environment.set(\"userPassword\", senhaAleatoria);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Parse do JSON da resposta",
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "// Valida o código de status",
+                  "pm.test(\"O código de status é 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "// Valida o tempo de resposta",
+                  "pm.test(\"O tempo de resposta é inferior a 2 segundos\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+                  "});",
+                  "",
+                  "// Valida o tipo de conteúdo",
+                  "pm.test(\"O cabeçalho da resposta é um JSON\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");",
+                  "});",
+                  "",
+                  "// Valida a mensagem de resposta",
+                  "pm.test(\"A mensagem de resposta está correta\", function () {",
+                  "    pm.expect(responseJson.message).to.eql(\"Cadastro realizado com sucesso\");",
+                  "});",
+                  "",
+                  "// Schema da resposta",
+                  "const schema = { type: \"object\", properties: { message: { type: \"string\" }, _id: { type: \"string\" } }, required: [\"message\", \"_id\"] };",
+                  "",
+                  "// Valida se o contrato é válido",
+                  "pm.test(\"O contrato é válido\", function () {",
+                  "    pm.response.to.have.jsonSchema(schema);",
+                  "});",
+                  "",
+                  "// Valida se o id foi gerado e salvo no environment",
+                  "pm.test(\"O id foi gerado e salvo\", function () {",
+                  "    pm.expect(responseJson._id).to.not.be.empty;",
+                  "    pm.environment.set(\"userId\", responseJson._id);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"nome\": \"{{userName}}\",\n    \"email\": \"{{userEmail}}\",\n    \"password\": \"{{userPassword}}\",\n    \"administrador\": \"true\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/usuarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cadastrar Usuário (Email Duplicado)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Parse do JSON da resposta",
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "// Valida o código de status",
+                  "pm.test(\"O código de status é 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "// Valida o tipo de conteúdo",
+                  "pm.test(\"O cabeçalho da resposta é um JSON\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");",
+                  "});",
+                  "",
+                  "// Valida a mensagem de resposta",
+                  "pm.test(\"A mensagem de resposta está correta\", function () {",
+                  "    pm.expect(responseJson.message).to.eql(\"Este email já está sendo usado\");",
+                  "});",
+                  "",
+                  "// Schema da resposta",
+                  "const schema = { type: \"object\", properties: { message: { type: \"string\" } }, required: [\"message\"] };",
+                  "",
+                  "// Valida se o contrato é válido",
+                  "pm.test(\"O contrato é válido\", function () {",
+                  "    pm.response.to.have.jsonSchema(schema);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"nome\": \"{{userName}}\",\n    \"email\": \"{{userEmail}}\",\n    \"password\": \"{{userPassword}}\",\n    \"administrador\": \"true\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/usuarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar Usuário por ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Parse do JSON da resposta",
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "// Valida o código de status",
+                  "pm.test(\"O código de status é 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "// Valida o tipo de conteúdo",
+                  "pm.test(\"O cabeçalho da resposta é um JSON\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");",
+                  "});",
+                  "",
+                  "// Schema da resposta",
+                  "const schema = {",
+                  "    type: \"object\",",
+                  "    properties: { nome: { type: \"string\" }, email: { type: \"string\" }, password: { type: \"string\" }, administrador: { type: \"string\" }, _id: { type: \"string\" } },",
+                  "    required: [\"nome\", \"email\", \"password\", \"administrador\", \"_id\"]",
+                  "};",
+                  "",
+                  "// Valida se o contrato é válido",
+                  "pm.test(\"O contrato é válido\", function () {",
+                  "    pm.response.to.have.jsonSchema(schema);",
+                  "});",
+                  "",
+                  "// Valida dados",
+                  "pm.test(\"Dados coincidem com Environment\", () => {",
+                  "    pm.expect(responseJson.nome).to.eql(pm.environment.get(\"userName\"));",
+                  "    pm.expect(responseJson.email).to.eql(pm.environment.get(\"userEmail\"));",
+                  "    pm.expect(responseJson._id).to.eql(pm.environment.get(\"userId\"));",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{userId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar Usuário por ID (Não Encontrado)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Gera um ID de 16 caracteres e salva para reutilizar em outras requisições",
+                  "const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';",
+                  "let novoFakeId = '';",
+                  "for (let i = 0; i < 16; i++) { novoFakeId += chars.charAt(Math.floor(Math.random() * chars.length)); }",
+                  "pm.environment.set(\"fakeId\", novoFakeId);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Parse do JSON da resposta",
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "// Valida o código de status",
+                  "pm.test(\"O código de status é 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "// Valida o tipo de conteúdo",
+                  "pm.test(\"O cabeçalho da resposta é um JSON\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");",
+                  "});",
+                  "",
+                  "// Valida a mensagem de resposta",
+                  "pm.test(\"A mensagem de resposta está correta\", function () {",
+                  "    pm.expect(responseJson.message).to.not.be.empty;",
+                  "    pm.expect(responseJson.message).to.eql(\"Usuário não encontrado\");",
+                  "});",
+                  "",
+                  "// Schema da resposta",
+                  "const schema = { type: \"object\", properties: { message: { type: \"string\" } }, required: [\"message\"] };",
+                  "",
+                  "// Valida se o contrato é válido",
+                  "pm.test(\"O contrato é válido\", function () {",
+                  "    pm.response.to.have.jsonSchema(schema);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{fakeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{fakeId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Logar Usuário",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Parse do JSON da resposta",
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "// Valida o código de status",
+                  "pm.test(\"O código de status é 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "// Valida o tipo de conteúdo",
+                  "pm.test(\"O cabeçalho da resposta é um JSON\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");",
+                  "});",
+                  "",
+                  "// Valida a mensagem de resposta",
+                  "pm.test(\"A mensagem de resposta está correta\", function () {",
+                  "    pm.expect(responseJson.message).to.eql(\"Login realizado com sucesso\");",
+                  "});",
+                  "",
+                  "// Schema da resposta",
+                  "const schema = { type: \"object\", properties: { message: { type: \"string\" }, authorization: { type: \"string\" } }, required: [\"message\", \"authorization\"] };",
+                  "",
+                  "// Valida se o contrato é válido",
+                  "pm.test(\"O contrato é válido\", function () {",
+                  "    pm.response.to.have.jsonSchema(schema);",
+                  "});",
+                  "",
+                  "// Valida se o token foi gerado e salvo",
+                  "pm.test(\"O Token foi gerado e salvo\", function () {",
+                  "    pm.expect(responseJson.authorization).to.include(\"Bearer \");",
+                  "    pm.environment.set(\"authToken\", responseJson.authorization);",
+                  "});",
+                  "",
+                  "// Valida se o token possui expiração de 10 minutos",
+                  "pm.test(\"Duração do token é de 10 minutos\", function () {",
+                  "    const authorization = responseJson.authorization;",
+                  "    const base64Content = authorization.replace(\"Bearer \", \"\");",
+                  "    ",
+                  "    const decodedToken = JSON.parse(atob(base64Content));",
+                  "    ",
+                  "    const iat = decodedToken.iat;",
+                  "    const exp = decodedToken.exp;",
+                  "    const diffMinutes = (exp - iat) / 60;",
+                  "",
+                  "    console.log(\"Duração calculada (min):\", diffMinutes);",
+                  "    pm.expect(diffMinutes).to.equal(10);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "packages": {},
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"{{userEmail}}\",\n    \"password\": \"{{userPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Logar Usuário (Senha Inválida)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Parse do JSON da resposta",
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "// Valida o código de status",
+                  "pm.test(\"O código de status é 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "// Valida o tipo de conteúdo",
+                  "pm.test(\"O cabeçalho da resposta é um JSON\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");",
+                  "});",
+                  "",
+                  "// Valida a mensagem de resposta",
+                  "pm.test(\"A mensagem de resposta está correta\", function () {",
+                  "    pm.expect(responseJson.message).to.eql(\"Email e/ou senha inválidos\");",
+                  "});",
+                  "",
+                  "// Schema da resposta",
+                  "const schema = { type: \"object\", properties: { message: { type: \"string\" } }, required: [\"message\"] };",
+                  "",
+                  "// Valida se o contrato é válido",
+                  "pm.test(\"O contrato é válido\", function () {",
+                  "    pm.response.to.have.jsonSchema(schema);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"{{userEmail}}\",\n    \"password\": \"SenhaErrada123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Produtos",
+      "item": [
+        {
+          "name": "Cadastrar Produto",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Gera dados",
+                  "pm.environment.set(\"productName\", pm.variables.replaceIn('{{$randomProductName}}') + ' ' + Date.now());",
+                  "pm.environment.set(\"productDesc\", pm.variables.replaceIn('{{$randomLoremSentence}}'));",
+                  "pm.environment.set(\"productPrice\", Math.floor(Math.random() * 900) + 100);",
+                  "pm.environment.set(\"productQty\", Math.floor(Math.random() * 90) + 10);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Parse do JSON da resposta",
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "// Valida o código de status",
+                  "pm.test(\"O código de status é 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "// Valida o tipo de conteúdo",
+                  "pm.test(\"O cabeçalho da resposta é um JSON\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");",
+                  "});",
+                  "",
+                  "// Valida a mensagem de resposta",
+                  "pm.test(\"A mensagem de resposta está correta\", function () {",
+                  "    pm.expect(responseJson.message).to.eql(\"Cadastro realizado com sucesso\");",
+                  "});",
+                  "",
+                  "// Schema da resposta",
+                  "const schema = { type: \"object\", properties: { message: { type: \"string\" }, _id: { type: \"string\" } }, required: [\"message\", \"_id\"] };",
+                  "",
+                  "// Valida se o contrato é válido",
+                  "pm.test(\"O contrato é válido\", function () {",
+                  "    pm.response.to.have.jsonSchema(schema);",
+                  "});",
+                  "",
+                  "// Valida se o id foi gerado",
+                  "pm.test(\"O id foi gerado e salvo\", () => pm.environment.set(\"productId\", responseJson._id));"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "{{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"nome\": \"{{productName}}\",\n    \"preco\": {{productPrice}},\n    \"descricao\": \"{{productDesc}}\",\n    \"quantidade\": {{productQty}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/produtos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "produtos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cadastrar Produto (Já Existente)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Parse do JSON da resposta",
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "// Valida o código de status",
+                  "pm.test(\"O código de status é 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "// Valida o tipo de conteúdo",
+                  "pm.test(\"O cabeçalho da resposta é um JSON\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");",
+                  "});",
+                  "",
+                  "// Valida a mensagem de resposta",
+                  "pm.test(\"A mensagem de resposta está correta\", function () {",
+                  "    pm.expect(responseJson.message).to.eql(\"Já existe produto com esse nome\");",
+                  "});",
+                  "",
+                  "// Schema da resposta",
+                  "const schema = { type: \"object\", properties: { message: { type: \"string\" } }, required: [\"message\"] };",
+                  "",
+                  "// Valida se o contrato é válido",
+                  "pm.test(\"O contrato é válido\", function () {",
+                  "    pm.response.to.have.jsonSchema(schema);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "{{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"nome\": \"{{productName}}\",\n    \"preco\": {{productPrice}},\n    \"descricao\": \"{{productDesc}}\",\n    \"quantidade\": {{productQty}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/produtos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "produtos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cadastrar Produto (Token Inválido)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Inseta token falso para a requisição\r",
+                  "pm.request.headers.upsert({ key: 'Authorization', value: 'Bearer token-falso' });"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Parse do JSON da resposta",
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "// Valida o código de status",
+                  "pm.test(\"O código de status é 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "// Valida o tipo de conteúdo",
+                  "pm.test(\"O cabeçalho da resposta é um JSON\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");",
+                  "});",
+                  "",
+                  "// Valida a mensagem de resposta",
+                  "pm.test(\"A mensagem de resposta está correta\", function () {",
+                  "    pm.expect(responseJson.message).to.include(\"Token de acesso ausente\");",
+                  "});",
+                  "",
+                  "// Schema da resposta",
+                  "const schema = { type: \"object\", properties: { message: { type: \"string\" } }, required: [\"message\"] };",
+                  "",
+                  "// Valida se o contrato é válido",
+                  "pm.test(\"O contrato é válido\", function () {",
+                  "    pm.response.to.have.jsonSchema(schema);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"nome\": \"{{productName}}\",\n    \"preco\": {{productPrice}},\n    \"descricao\": \"{{productDesc}}\",\n    \"quantidade\": {{productQty}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/produtos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "produtos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cadastrar Produto (Não ADM)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Cria um usuário comum, faz login e salva o token no environment",
+                  "const emailNaoAdmin = \"comum\" + Date.now() + \"@email.com\";",
+                  "const reqCriarUsuario = {",
+                  "    url: pm.environment.get(\"baseUrl\") + '/usuarios', method: 'POST', header: 'Content-Type:application/json',",
+                  "    body: { mode: 'raw', raw: JSON.stringify({ nome: \"Comum\", email: emailNaoAdmin, password: \"123\", administrador: \"false\" }) }",
+                  "};",
+                  "pm.sendRequest(reqCriarUsuario, function (err, res) {",
+                  "    const reqLogin = {",
+                  "        url: pm.environment.get(\"baseUrl\") + '/login', method: 'POST', header: 'Content-Type:application/json',",
+                  "        body: { mode: 'raw', raw: JSON.stringify({ email: emailNaoAdmin, password: \"123\" }) }",
+                  "    };",
+                  "    pm.sendRequest(reqLogin, function (errLogin, resLogin) {",
+                  "        pm.environment.set(\"authTokenComum\", resLogin.json().authorization);",
+                  "        pm.request.headers.upsert({ key: 'Authorization', value: resLogin.json().authorization });",
+                  "    });",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Parse do JSON da resposta",
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "// Valida o código de status",
+                  "pm.test(\"O código de status é 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "",
+                  "// Valida o tipo de conteúdo",
+                  "pm.test(\"O cabeçalho da resposta é um JSON\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");",
+                  "});",
+                  "",
+                  "// Valida a mensagem de resposta",
+                  "pm.test(\"A mensagem de resposta está correta\", function () {",
+                  "    pm.expect(responseJson.message).to.eql(\"Rota exclusiva para administradores\");",
+                  "});",
+                  "",
+                  "// Schema da resposta",
+                  "const schema = { type: \"object\", properties: { message: { type: \"string\" } }, required: [\"message\"] };",
+                  "",
+                  "// Valida se o contrato é válido",
+                  "pm.test(\"O contrato é válido\", function () {",
+                  "    pm.response.to.have.jsonSchema(schema);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"nome\": \"{{productName}}\",\n    \"preco\": {{productPrice}},\n    \"descricao\": \"{{productDesc}}\",\n    \"quantidade\": {{productQty}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/produtos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "produtos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar Produto por ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Parse do JSON da resposta",
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "// Valida o código de status",
+                  "pm.test(\"O código de status é 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "// Valida o tipo de conteúdo",
+                  "pm.test(\"O cabeçalho da resposta é um JSON\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");",
+                  "});",
+                  "",
+                  "// Schema da resposta",
+                  "const schema = {",
+                  "    type: \"object\", properties: { nome: { type: \"string\" }, preco: { type: \"number\" }, descricao: { type: \"string\" }, quantidade: { type: \"integer\" }, _id: { type: \"string\" } },",
+                  "    required: [\"nome\", \"preco\", \"descricao\", \"quantidade\", \"_id\"]",
+                  "};",
+                  "",
+                  "// Valida se o contrato é válido",
+                  "pm.test(\"O contrato é válido\", function () {",
+                  "    pm.response.to.have.jsonSchema(schema);",
+                  "});",
+                  "",
+                  "// Valida dados",
+                  "pm.test(\"Dados coincidem com Environment\", () => {",
+                  "    pm.expect(responseJson.nome).to.eql(pm.environment.get(\"productName\"));",
+                  "    pm.expect(responseJson.preco).to.eql(Number(pm.environment.get(\"productPrice\")));",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/produtos/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "produtos",
+                "{{productId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar Produto por ID (Não Encontrado)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Parse do JSON da resposta",
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "// Valida o código de status",
+                  "pm.test(\"O código de status é 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "// Valida o tipo de conteúdo",
+                  "pm.test(\"O cabeçalho da resposta é um JSON\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");",
+                  "});",
+                  "",
+                  "// Valida a mensagem de resposta",
+                  "pm.test(\"A mensagem de resposta está correta\", function () {",
+                  "    pm.expect(responseJson.message).to.eql(\"Produto não encontrado\");",
+                  "});",
+                  "",
+                  "// Schema da resposta",
+                  "const schema = { type: \"object\", properties: { message: { type: \"string\" } }, required: [\"message\"] };",
+                  "",
+                  "// Valida se o contrato é válido",
+                  "pm.test(\"O contrato é válido\", function () {",
+                  "    pm.response.to.have.jsonSchema(schema);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/produtos/{{fakeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "produtos",
+                "{{fakeId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Editar Produto",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Edita os dados",
+                  "pm.variables.set(\"tempProductName\", pm.environment.get(\"productName\") + \" - Editado\");",
+                  "pm.variables.set(\"tempProductDesc\", pm.variables.replaceIn('{{$randomLoremSentence}}'));",
+                  "pm.variables.set(\"tempProductPrice\", Math.floor(Math.random() * 900) + 100);",
+                  "pm.variables.set(\"tempProductQty\", Math.floor(Math.random() * 50) + 5);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Parse do JSON da resposta",
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "// Valida o código de status",
+                  "pm.test(\"O código de status é 200 (OK)\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "// Valida o tipo de conteúdo",
+                  "pm.test(\"O cabeçalho da resposta é um JSON\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");",
+                  "});",
+                  "",
+                  "// Valida a mensagem de resposta",
+                  "pm.test(\"A mensagem de resposta está correta\", function () {",
+                  "    pm.expect(responseJson.message).to.eql(\"Registro alterado com sucesso\");",
+                  "});",
+                  "",
+                  "// Schema da resposta",
+                  "const schema = { type: \"object\", properties: { message: { type: \"string\" } }, required: [\"message\"] };",
+                  "",
+                  "// Valida se o contrato é válido",
+                  "pm.test(\"O contrato é válido\", function () {",
+                  "    pm.response.to.have.jsonSchema(schema);",
+                  "});",
+                  "",
+                  "// Atualiza environment",
+                  "pm.test(\"Variáveis atualizadas no Environment\", () => {",
+                  "    pm.environment.set(\"productName\", pm.variables.get(\"tempProductName\"));",
+                  "    pm.environment.set(\"productDesc\", pm.variables.get(\"tempProductDesc\"));",
+                  "    pm.environment.set(\"productPrice\", pm.variables.get(\"tempProductPrice\"));",
+                  "    pm.environment.set(\"productQty\", pm.variables.get(\"tempProductQty\"));",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "{{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"nome\": \"{{tempProductName}}\",\n    \"preco\": {{tempProductPrice}},\n    \"descricao\": \"{{tempProductDesc}}\",\n    \"quantidade\": {{tempProductQty}}\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/produtos/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "produtos",
+                "{{productId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Editar Produto (Novo Cadastro)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "const nomeUpsert = \"Produto Novo \" + Date.now();",
+                  "",
+                  "pm.environment.set(\"nomeProdutoConflito\", nomeUpsert);",
+                  "pm.variables.set(\"upsertName\", nomeUpsert);",
+                  "pm.variables.set(\"upsertDesc\", \"Descrição nova\");"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Parse do JSON da resposta",
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "// Valida o código de status",
+                  "pm.test(\"O código de status é 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "// Valida o tipo de conteúdo",
+                  "pm.test(\"O cabeçalho da resposta é um JSON\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");",
+                  "});",
+                  "",
+                  "// Valida a mensagem de resposta",
+                  "pm.test(\"A mensagem de resposta está correta\", function () {",
+                  "    pm.expect(responseJson.message).to.eql(\"Cadastro realizado com sucesso\");",
+                  "});",
+                  "",
+                  "// Schema da resposta",
+                  "const schema = { type: \"object\", properties: { message: { type: \"string\" }, _id: { type: \"string\" } }, required: [\"message\", \"_id\"] };",
+                  "",
+                  "// Valida se o contrato é válido",
+                  "pm.test(\"O contrato é válido\", function () {",
+                  "    pm.response.to.have.jsonSchema(schema);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "{{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"nome\": \"{{upsertName}}\",\n    \"preco\": 150,\n    \"descricao\": \"{{upsertDesc}}\",\n    \"quantidade\": 10\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/produtos/{{fakeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "produtos",
+                "{{fakeId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Editar Produto (Já Existente)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Parse do JSON da resposta",
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "// Valida o código de status",
+                  "pm.test(\"O código de status é 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "// Valida o tipo de conteúdo",
+                  "pm.test(\"O cabeçalho da resposta é um JSON\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");",
+                  "});",
+                  "",
+                  "// Valida a mensagem de resposta",
+                  "pm.test(\"A mensagem de resposta está correta\", function () {",
+                  "    pm.expect(responseJson.message).to.eql(\"Já existe produto com esse nome\");",
+                  "});",
+                  "",
+                  "// Schema da resposta",
+                  "const schema = { type: \"object\", properties: { message: { type: \"string\" } }, required: [\"message\"] };",
+                  "",
+                  "// Valida se o contrato é válido",
+                  "pm.test(\"O contrato é válido\", function () {",
+                  "    pm.response.to.have.jsonSchema(schema);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "packages": {},
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "{{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"nome\": \"{{nomeProdutoConflito}}\",\n    \"preco\": 150,\n    \"descricao\": \"Produto duplicado\",\n    \"quantidade\": 10\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/produtos/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "produtos",
+                "{{productId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Editar Produto (Token Inválido)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.request.headers.upsert({ key: 'Authorization', value: 'Bearer token-invalido' });"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Parse do JSON da resposta",
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "// Valida o código de status",
+                  "pm.test(\"O código de status é 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "// Valida o tipo de conteúdo",
+                  "pm.test(\"O cabeçalho da resposta é um JSON\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");",
+                  "});",
+                  "",
+                  "// Valida a mensagem de resposta",
+                  "pm.test(\"A mensagem de resposta está correta\", function () {",
+                  "    pm.expect(responseJson.message).to.include(\"Token de acesso ausente\");",
+                  "});",
+                  "",
+                  "// Schema da resposta",
+                  "const schema = { type: \"object\", properties: { message: { type: \"string\" } }, required: [\"message\"] };",
+                  "",
+                  "// Valida se o contrato é válido",
+                  "pm.test(\"O contrato é válido\", function () {",
+                  "    pm.response.to.have.jsonSchema(schema);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"nome\": \"{{productName}}\",\n    \"preco\": 10,\n    \"descricao\": \"Teste\",\n    \"quantidade\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/produtos/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "produtos",
+                "{{productId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Editar Produto (Não ADM)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Usa token do usuário comum",
+                  "pm.request.headers.upsert({ key: 'Authorization', value: pm.environment.get(\"authTokenComum\") });"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Parse do JSON da resposta",
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "// Valida o código de status",
+                  "pm.test(\"O código de status é 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "",
+                  "// Valida o tipo de conteúdo",
+                  "pm.test(\"O cabeçalho da resposta é um JSON\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");",
+                  "});",
+                  "",
+                  "// Valida a mensagem de resposta",
+                  "pm.test(\"A mensagem de resposta está correta\", function () {",
+                  "    pm.expect(responseJson.message).to.eql(\"Rota exclusiva para administradores\");",
+                  "});",
+                  "",
+                  "// Schema da resposta",
+                  "const schema = { type: \"object\", properties: { message: { type: \"string\" } }, required: [\"message\"] };",
+                  "",
+                  "// Valida se o contrato é válido",
+                  "pm.test(\"O contrato é válido\", function () {",
+                  "    pm.response.to.have.jsonSchema(schema);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"nome\": \"{{productName}}\",\n    \"preco\": 10,\n    \"descricao\": \"Usuário Comum\",\n    \"quantidade\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/produtos/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "produtos",
+                "{{productId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar Produtos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Parse do JSON da resposta",
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "// Valida o código de status",
+                  "pm.test(\"O código de status é 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "// Valida o tipo de conteúdo",
+                  "pm.test(\"O cabeçalho da resposta é um JSON\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");",
+                  "});",
+                  "",
+                  "// Schema da resposta",
+                  "const schema = { type: \"object\", properties: { quantidade: { type: \"integer\" }, produtos: { type: \"array\" } }, required: [\"quantidade\", \"produtos\"] };",
+                  "",
+                  "// Valida se o contrato é válido",
+                  "pm.test(\"O contrato é válido\", function () {",
+                  "    pm.response.to.have.jsonSchema(schema);",
+                  "});",
+                  "",
+                  "// Valida Array",
+                  "pm.test(\"Quantidade reflete tamanho do array\", () => pm.expect(responseJson.quantidade).to.eql(responseJson.produtos.length));"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/produtos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "produtos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Excluir Produto",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Parse do JSON da resposta",
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "// Valida o código de status",
+                  "pm.test(\"O código de status é 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "// Valida o tipo de conteúdo",
+                  "pm.test(\"O cabeçalho da resposta é um JSON\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");",
+                  "});",
+                  "",
+                  "// Valida a mensagem de resposta",
+                  "pm.test(\"A mensagem de resposta está correta\", function () {",
+                  "    pm.expect(responseJson.message).to.not.be.empty;",
+                  "    pm.expect(responseJson.message).to.eql(\"Registro excluído com sucesso\");",
+                  "});",
+                  "",
+                  "// Schema da resposta",
+                  "const schema = { type: \"object\", properties: { message: { type: \"string\" } }, required: [\"message\"] };",
+                  "",
+                  "// Valida se o contrato é válido",
+                  "pm.test(\"O contrato é válido\", function () {",
+                  "    pm.response.to.have.jsonSchema(schema);",
+                  "});",
+                  "",
+                  "// Limpeza",
+                  "pm.test(\"Variável de ambiente limpa\", () => pm.environment.unset(\"productId\"));"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/produtos/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "produtos",
+                "{{productId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Excluir Produto (ID Não Encontrado)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Parse do JSON da resposta",
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "// Valida o código de status",
+                  "pm.test(\"O código de status é 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "// Valida o tipo de conteúdo",
+                  "pm.test(\"O cabeçalho da resposta é um JSON\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");",
+                  "});",
+                  "",
+                  "// Valida a mensagem de resposta",
+                  "pm.test(\"A mensagem de resposta está correta\", function () {",
+                  "    pm.expect(responseJson.message).to.eql(\"Nenhum registro excluído\");",
+                  "});",
+                  "",
+                  "// Schema da resposta",
+                  "const schema = { type: \"object\", properties: { message: { type: \"string\" } }, required: [\"message\"] };",
+                  "",
+                  "// Valida se o contrato é válido",
+                  "pm.test(\"O contrato é válido\", function () {",
+                  "    pm.response.to.have.jsonSchema(schema);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/produtos/{{fakeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "produtos",
+                "{{fakeId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Excluir Produto (Token Ausente)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Injeta token vazio\r",
+                  "pm.request.headers.upsert({ key: 'Authorization', value: '' });"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Parse do JSON da resposta",
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "// Valida o código de status",
+                  "pm.test(\"O código de status é 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "// Valida o tipo de conteúdo",
+                  "pm.test(\"O cabeçalho da resposta é um JSON\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");",
+                  "});",
+                  "",
+                  "// Valida a mensagem de resposta",
+                  "pm.test(\"A mensagem de resposta está correta\", function () {",
+                  "    pm.expect(responseJson.message).to.include(\"Token de acesso ausente\");",
+                  "});",
+                  "",
+                  "// Schema da resposta",
+                  "const schema = { type: \"object\", properties: { message: { type: \"string\" } }, required: [\"message\"] };",
+                  "",
+                  "// Valida se o contrato é válido",
+                  "pm.test(\"O contrato é válido\", function () {",
+                  "    pm.response.to.have.jsonSchema(schema);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/produtos/{{fakeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "produtos",
+                "{{fakeId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Excluir Produto (Não ADM)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Reutiliza token usuário comum",
+                  "pm.request.headers.upsert({ key: 'Authorization', value: pm.environment.get(\"authTokenComum\") });"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Parse do JSON da resposta",
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "// Valida o código de status",
+                  "pm.test(\"O código de status é 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "",
+                  "// Valida o tipo de conteúdo",
+                  "pm.test(\"O cabeçalho da resposta é um JSON\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");",
+                  "});",
+                  "",
+                  "// Valida a mensagem de resposta",
+                  "pm.test(\"A mensagem de resposta está correta\", function () {",
+                  "    pm.expect(responseJson.message).to.eql(\"Rota exclusiva para administradores\");",
+                  "});",
+                  "",
+                  "// Schema da resposta",
+                  "const schema = { type: \"object\", properties: { message: { type: \"string\" } }, required: [\"message\"] };",
+                  "",
+                  "// Valida se o contrato é válido",
+                  "pm.test(\"O contrato é válido\", function () {",
+                  "    pm.response.to.have.jsonSchema(schema);",
+                  "});",
+                  "",
+                  "// Limpeza das variáveis de ambiente (Teardown)",
+                  "pm.test(\"Variáveis de Produto Limpas\", function () {",
+                  "    pm.environment.unset(\"productId\");",
+                  "    pm.environment.unset(\"productName\");",
+                  "    pm.environment.unset(\"productDesc\");",
+                  "    pm.environment.unset(\"productPrice\");",
+                  "    pm.environment.unset(\"productQty\");",
+                  "    pm.environment.unset(\"nomeProdutoConflito\");",
+                  "",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/produtos/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "produtos",
+                "{{productId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Usuários",
+      "item": [
+        {
+          "name": "Editar Usuário",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// gera novos dados",
+                  "const primeiroNome = pm.environment.get(\"userName\").split(\" \")[0];",
+                  "pm.variables.set(\"tempUserName\", primeiroNome + \" Editado\");",
+                  "pm.variables.set(\"tempUserEmail\", primeiroNome.toLowerCase() + Date.now() + \"@email.com\");"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Parse do JSON da resposta",
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "// Valida o código de status",
+                  "pm.test(\"O código de status é 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "// Valida o tipo de conteúdo",
+                  "pm.test(\"O cabeçalho da resposta é um JSON\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");",
+                  "});",
+                  "",
+                  "// Valida a mensagem de resposta",
+                  "pm.test(\"A mensagem de resposta está correta\", function () {",
+                  "    pm.expect(responseJson.message).to.eql(\"Registro alterado com sucesso\");",
+                  "});",
+                  "",
+                  "// Schema da resposta",
+                  "const schema = { type: \"object\", properties: { message: { type: \"string\" } }, required: [\"message\"] };",
+                  "",
+                  "// Valida se o contrato é válido",
+                  "pm.test(\"O contrato é válido\", function () {",
+                  "    pm.response.to.have.jsonSchema(schema);",
+                  "});",
+                  "",
+                  "// Atualiza Environment",
+                  "pm.test(\"Environment atualizado\", () => {",
+                  "    pm.environment.set(\"userName\", pm.variables.get(\"tempUserName\"));",
+                  "    pm.environment.set(\"userEmail\", pm.variables.get(\"tempUserEmail\"));",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"nome\": \"{{tempUserName}}\",\n    \"email\": \"{{tempUserEmail}}\",\n    \"password\": \"{{userPassword}}\",\n    \"administrador\": \"true\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{userId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Editar Usuário (Novo Cadastro)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "pm.variables.set(\"upsertUserName\", \"Usuario Novo \" + Date.now());",
+                  "",
+                  "// Gera o email e guarda no Environment para usar no próximo teste",
+                  "const emailUpsert = \"novo\" + Date.now() + \"@email.com\";",
+                  "pm.environment.set(\"emailUsuarioConflito\", emailUpsert);",
+                  "",
+                  "pm.variables.set(\"upsertUserEmail\", emailUpsert);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Parse do JSON da resposta",
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "// Valida o código de status",
+                  "pm.test(\"O código de status é 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "// Valida o tipo de conteúdo",
+                  "pm.test(\"O cabeçalho da resposta é um JSON\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");",
+                  "});",
+                  "",
+                  "// Valida a mensagem de resposta",
+                  "pm.test(\"A mensagem de resposta está correta\", function () {",
+                  "    pm.expect(responseJson.message).to.eql(\"Cadastro realizado com sucesso\");",
+                  "});",
+                  "",
+                  "// Schema da resposta",
+                  "const schema = { type: \"object\", properties: { message: { type: \"string\" }, _id: { type: \"string\" } }, required: [\"message\", \"_id\"] };",
+                  "",
+                  "// Valida se o contrato é válido",
+                  "pm.test(\"O contrato é válido\", function () {",
+                  "    pm.response.to.have.jsonSchema(schema);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"nome\": \"{{upsertUserName}}\",\n    \"email\": \"{{upsertUserEmail}}\",\n    \"password\": \"123\",\n    \"administrador\": \"true\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{fakeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{fakeId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Editar Usuário (Já Existente)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Parse do JSON da resposta",
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "// Valida o código de status",
+                  "pm.test(\"O código de status é 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "// Valida o tipo de conteúdo",
+                  "pm.test(\"O cabeçalho da resposta é um JSON\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");",
+                  "});",
+                  "",
+                  "// Valida a mensagem de resposta",
+                  "pm.test(\"A mensagem de resposta está correta\", function () {",
+                  "    pm.expect(responseJson.message).to.eql(\"Este email já está sendo usado\");",
+                  "});",
+                  "",
+                  "// Schema da resposta",
+                  "const schema = { type: \"object\", properties: { message: { type: \"string\" } }, required: [\"message\"] };",
+                  "",
+                  "// Valida se o contrato é válido",
+                  "pm.test(\"O contrato é válido\", function () {",
+                  "    pm.response.to.have.jsonSchema(schema);",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"nome\": \"{{userName}}\",\n    \"email\": \"{{emailUsuarioConflito}}\",\n    \"password\": \"{{userPassword}}\",\n    \"administrador\": \"true\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{userId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar Usuários",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Parse do JSON da resposta",
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "// Valida o código de status",
+                  "pm.test(\"O código de status é 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "// Valida o tipo de conteúdo",
+                  "pm.test(\"O cabeçalho da resposta é um JSON\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");",
+                  "});",
+                  "",
+                  "// Schema da resposta",
+                  "const schema = { type: \"object\", properties: { quantidade: { type: \"integer\" }, usuarios: { type: \"array\" } }, required: [\"quantidade\", \"usuarios\"] };",
+                  "",
+                  "// Valida se o contrato é válido",
+                  "pm.test(\"O contrato é válido\", function () {",
+                  "    pm.response.to.have.jsonSchema(schema);",
+                  "});",
+                  "",
+                  "// Valida Array",
+                  "pm.test(\"Quantidade bate com tamanho do array\", () => pm.expect(responseJson.quantidade).to.eql(responseJson.usuarios.length));"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Excluir Usuário",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Parse do JSON da resposta",
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "// Valida o código de status",
+                  "pm.test(\"O código de status é 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "// Valida o tipo de conteúdo",
+                  "pm.test(\"O cabeçalho da resposta é um JSON\", function () {",
+                  "    pm.response.to.have.header(\"Content-Type\", \"application/json; charset=utf-8\");",
+                  "});",
+                  "",
+                  "// Valida a mensagem de resposta",
+                  "pm.test(\"A mensagem de resposta está correta\", function () {",
+                  "    pm.expect(responseJson.message).to.eql(\"Registro excluído com sucesso\");",
+                  "});",
+                  "",
+                  "// Schema da resposta",
+                  "const schema = { type: \"object\", properties: { message: { type: \"string\" } }, required: [\"message\"] };",
+                  "",
+                  "// Valida se o contrato é válido",
+                  "pm.test(\"O contrato é válido\", function () {",
+                  "    pm.response.to.have.jsonSchema(schema);",
+                  "});",
+                  "",
+                  "// Limpa environment (Teardown)",
+                  "pm.test(\"Variáveis de usuário limpas\", () => {",
+                  "    pm.environment.unset(\"userId\");",
+                  "    pm.environment.unset(\"userEmail\");",
+                  "    pm.environment.unset(\"userPassword\");",
+                  "    pm.environment.unset(\"userName\");",
+                  "    pm.environment.unset(\"authToken\");",
+                  "    pm.environment.unset(\"authTokenComum\");",
+                  "    pm.environment.unset(\"fakeId\");",
+                  "    pm.environment.unset(\"emailUsuarioConflito\");",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/usuarios/{{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "usuarios",
+                "{{userId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
